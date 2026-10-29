@@ -9,7 +9,10 @@
 .idea/
 *.iml
 
-
+#develops skills agent
+.agents
+.config
+.dart_tool
 
 # Flutter repo-specific
 /bin/cache/
@@ -133,7 +136,6 @@ coverage/
 .env
 .env.*
 !.env.example
-
 
 # Symbols
 app.*.symbols
