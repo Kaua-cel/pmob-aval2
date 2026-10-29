@@ -6,6 +6,8 @@
 *.swp
 .buildlog/
 .history
+.idea/
+*.iml
 
 
 
@@ -106,6 +108,21 @@ unlinked_spec.ds
 
 # Coverage
 coverage/
+# Distribuição e credenciais privadas
+*.apk
+*.aab
+*.ipa
+*.keystore
+*.p12
+*.p8
+*.mobileprovision
+*.cer
+*.crt
+*.pem
+.env
+.env.*
+!.env.example
+
 
 # Symbols
 app.*.symbols
