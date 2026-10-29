@@ -108,10 +108,21 @@ unlinked_spec.ds
 
 # Coverage
 coverage/
+
 # Distribuição e credenciais privadas
 *.apk
 *.aab
 *.ipa
+
+# Executáveis e binários gerados
+*.exe
+*.dll
+*.so
+*.dylib
+*.bin
+*.o
+*.obj
+
 *.keystore
 *.p12
 *.p8
