@@ -12,10 +12,18 @@ telas iniciais de listagem e cadastro.
 
 ```bash
 flutter pub get
-flutter run
+flutter run \
+  --dart-define=SUPABASE_URL=<project-url> \
+  --dart-define=SUPABASE_ANON_KEY=<anon-key>
 ```
 
-Para executar no navegador, use `flutter run -d chrome` quando o Chrome estiver disponível.
+Substitua os valores pelos dados públicos do projeto Supabase. Não versione `service_role`,
+senha do banco, token pessoal, chave administrativa ou um arquivo `.env` com valores reais.
+Veja [docs/cloud-storage.md](docs/cloud-storage.md) para criar a tabela, aplicar a migration,
+configurar RLS e validar a persistência entre instalações.
+
+Para executar no navegador, adicione `-d chrome` ao comando acima quando o Chrome estiver
+disponível.
 
 ## Validar
 
