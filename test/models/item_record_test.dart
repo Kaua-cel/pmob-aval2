@@ -59,7 +59,7 @@ void main() {
         status: ItemStatus.lost,
       );
 
-      final Map<String, dynamic> storage = ItemRecordMapper.toStorage(pending);
+      final ItemRecordStorage storage = ItemRecordMapper.toStorage(pending);
       final ItemRecord restored = ItemRecordMapper.fromStorage(storage);
       final ItemRecord restoredWithoutMetadata = ItemRecordMapper.fromStorage({
         'name': 'Water bottle',
