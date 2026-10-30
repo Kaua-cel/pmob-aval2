@@ -1,12 +1,15 @@
 import 'item_record.dart';
 
+/// Typed key-value data used when serializing an [ItemRecord].
+typedef ItemRecordStorage = Map<String, Object?>;
+
 /// Converts [ItemRecord] values to and from stable persistence data.
 abstract final class ItemRecordMapper {
   /// Serializes [record] using stable cloud-ready storage keys.
   ///
   /// The `id` and `createdAt` keys contain `null` until remote confirmation.
   /// Non-null dates are ISO 8601 UTC strings.
-  static Map<String, dynamic> toStorage(ItemRecord record) {
+  static ItemRecordStorage toStorage(ItemRecord record) {
     return {
       'id': record.id,
       'name': record.name,
@@ -21,7 +24,7 @@ abstract final class ItemRecordMapper {
   ///
   /// Throws an [ArgumentError] for missing required fields, invalid value types,
   /// unknown statuses, or dates that are not ISO 8601 UTC strings.
-  static ItemRecord fromStorage(Map<String, dynamic> storage) {
+  static ItemRecord fromStorage(ItemRecordStorage storage) {
     return ItemRecord(
       id: _readOptionalString(storage, 'id'),
       name: _readRequiredString(storage, 'name'),
@@ -32,7 +35,7 @@ abstract final class ItemRecordMapper {
     );
   }
 
-  static String _readRequiredString(Map<String, dynamic> storage, String key) {
+  static String _readRequiredString(ItemRecordStorage storage, String key) {
     final Object? value = storage[key];
     if (value is String) {
       return value;
@@ -41,7 +44,7 @@ abstract final class ItemRecordMapper {
     throw ArgumentError.value(value, key, 'Expected a non-null String.');
   }
 
-  static String? _readOptionalString(Map<String, dynamic> storage, String key) {
+  static String? _readOptionalString(ItemRecordStorage storage, String key) {
     final Object? value = storage[key];
     if (value == null) {
       return null;
@@ -53,7 +56,7 @@ abstract final class ItemRecordMapper {
     throw ArgumentError.value(value, key, 'Expected a String or null.');
   }
 
-  static DateTime? _readOptionalUtcDateTime(Map<String, dynamic> storage, String key) {
+  static DateTime? _readOptionalUtcDateTime(ItemRecordStorage storage, String key) {
     final Object? value = storage[key];
     if (value == null) {
       return null;
