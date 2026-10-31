@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../models/item_record.dart';
 
@@ -18,6 +19,9 @@ class _TelaCadastroState extends State<TelaCadastro> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
   ItemStatus _status = ItemStatus.lost;
+  bool _isSubmitting = false;
+
+  bool get _isProcessing => widget.isProcessing || _isSubmitting;
 
   @override
   void dispose() {
@@ -43,7 +47,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
               const SizedBox(height: 24),
               TextFormField(
                 controller: _nameController,
-                enabled: !widget.isProcessing,
+                enabled: !_isProcessing,
                 maxLength: ItemFieldLimits.nameMaxLength,
                 maxLengthEnforcement: MaxLengthEnforcement.none,
                 textCapitalization: TextCapitalization.sentences,
@@ -52,11 +56,16 @@ class _TelaCadastroState extends State<TelaCadastro> {
                   labelText: 'Nome do objeto',
                   hintText: 'Ex.: Guarda-chuva preto',
                 ),
+                validator: (String? value) => _validateRequiredMaxLength(
+                  value,
+                  fieldLabel: 'O nome do objeto',
+                  maximum: ItemFieldLimits.nameMaxLength,
+                ),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                enabled: !widget.isProcessing,
+                enabled: !_isProcessing,
                 maxLength: ItemFieldLimits.descriptionMaxLength,
                 maxLengthEnforcement: MaxLengthEnforcement.none,
                 minLines: 3,
@@ -67,17 +76,28 @@ class _TelaCadastroState extends State<TelaCadastro> {
                   labelText: 'Descrição',
                   hintText: 'Descreva características que ajudem a identificar o objeto',
                 ),
+                validator: (String? value) => _validateRequiredMaxLength(
+                  value,
+                  fieldLabel: 'A descrição',
+                  maximum: ItemFieldLimits.descriptionMaxLength,
+                ),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _locationController,
-                enabled: !widget.isProcessing,
+                enabled: !_isProcessing,
                 textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Local',
                   hintText: 'Ex.: Biblioteca',
                 ),
+                validator: (String? value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Informe o local do objeto.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 24),
               Text('Situação', style: Theme.of(context).textTheme.titleMedium),
@@ -96,21 +116,21 @@ class _TelaCadastroState extends State<TelaCadastro> {
                   ),
                 ],
                 selected: <ItemStatus>{_status},
-                onSelectionChanged: widget.isProcessing
+                onSelectionChanged: _isProcessing
                     ? null
                     : (Set<ItemStatus> selected) => setState(() => _status = selected.first),
               ),
               const SizedBox(height: 32),
               FilledButton.icon(
-                onPressed: widget.isProcessing || widget.onSave == null ? null : _submit,
-                icon: widget.isProcessing
+                onPressed: _isProcessing || widget.onSave == null ? null : _submit,
+                icon: _isProcessing
                     ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save_outlined),
-                label: Text(widget.isProcessing ? 'Salvando...' : 'Salvar objeto'),
+                label: Text(_isProcessing ? 'Salvando...' : 'Salvar objeto'),
               ),
             ],
           ),
@@ -120,6 +140,38 @@ class _TelaCadastroState extends State<TelaCadastro> {
   }
 
   Future<void> _submit() async {
-    // Field validation and record creation are added with the form rules.
+    if (!(_formKey.currentState?.validate() ?? false) || widget.onSave == null) {
+      return;
+    }
+
+    final ItemRecord record = ItemRecord(
+      name: _nameController.text.trim(),
+      description: _descriptionController.text.trim(),
+      location: _locationController.text.trim(),
+      status: _status,
+    );
+
+    setState(() => _isSubmitting = true);
+    try {
+      await widget.onSave!(record);
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  String? _validateRequiredMaxLength(
+    String? value, {
+    required String fieldLabel,
+    required int maximum,
+  }) {
+    if (value == null || value.trim().isEmpty) {
+      return '$fieldLabel é obrigatório.';
+    }
+    if (value.length > maximum) {
+      return '$fieldLabel deve ter no máximo $maximum caracteres.';
+    }
+    return null;
   }
 }
