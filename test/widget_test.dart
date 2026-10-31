@@ -83,4 +83,53 @@ final class _ListRepository implements ItemRecordRepository {
 
   @override
   Future<List<ItemRecord>> listItemRecords() => onList();
+  testWidgets('valida os campos obrigatórios do cadastro', (WidgetTester tester) async {
+    await tester.pumpWidget(MaterialApp(home: TelaCadastro(onSave: (_) async {})));
+
+    await _tapSaveButton(tester);
+    await tester.pump();
+
+    expect(find.text('O nome do objeto é obrigatório.'), findsOneWidget);
+    expect(find.text('A descrição é obrigatória.'), findsOneWidget);
+    expect(find.text('Informe o local do objeto.'), findsOneWidget);
+  });
+
+  testWidgets('rejeita nome e descrição acima dos limites', (WidgetTester tester) async {
+    await tester.pumpWidget(MaterialApp(home: TelaCadastro(onSave: (_) async {})));
+
+    await tester.enterText(find.byType(TextFormField).at(0), 'a' * 61);
+    await tester.enterText(find.byType(TextFormField).at(1), 'b' * 201);
+    await tester.enterText(find.byType(TextFormField).at(2), 'Biblioteca');
+    await _tapSaveButton(tester);
+    await tester.pump();
+
+    expect(find.text('O nome do objeto deve ter no máximo 60 caracteres.'), findsOneWidget);
+    expect(find.text('A descrição deve ter no máximo 200 caracteres.'), findsOneWidget);
+  });
+
+  testWidgets('envia um registro válido com a situação selecionada', (WidgetTester tester) async {
+    ItemRecord? savedRecord;
+    await tester.pumpWidget(
+      MaterialApp(home: TelaCadastro(onSave: (ItemRecord record) async => savedRecord = record)),
+    );
+
+    await tester.enterText(find.byType(TextFormField).at(0), 'Chave do laboratório');
+    await tester.enterText(find.byType(TextFormField).at(1), 'Chave com chaveiro azul.');
+    await tester.enterText(find.byType(TextFormField).at(2), 'Laboratório 2');
+    await tester.tap(find.text('Encontrado'));
+    await tester.pump();
+    await _tapSaveButton(tester);
+    await tester.pumpAndSettle();
+
+    expect(savedRecord?.name, 'Chave do laboratório');
+    expect(savedRecord?.description, 'Chave com chaveiro azul.');
+    expect(savedRecord?.location, 'Laboratório 2');
+    expect(savedRecord?.status, ItemStatus.found);
+  });
+}
+
+Future<void> _tapSaveButton(WidgetTester tester) async {
+  await tester.drag(find.byType(ListView), const Offset(0, -600));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Salvar objeto'));
 }
