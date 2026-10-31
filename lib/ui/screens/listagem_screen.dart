@@ -1,12 +1,53 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../models/item_record.dart';
+import '../../state/item_list_controller.dart';
 import '../components/empty_state.dart';
 import '../components/item_record_card.dart';
 import '../components/list_feedback_state.dart';
 import '../routes.dart';
 
 enum EstadoListaObjetos { carregando, sucesso, falha }
+
+class TelaListagemComEstado extends StatefulWidget {
+  const TelaListagemComEstado({super.key, required this.controller});
+
+  final ItemListController controller;
+
+  @override
+  State<TelaListagemComEstado> createState() => _TelaListagemComEstadoState();
+}
+
+class _TelaListagemComEstadoState extends State<TelaListagemComEstado> {
+  @override
+  void initState() {
+    super.initState();
+    unawaited(widget.controller.load());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: widget.controller,
+      builder: (BuildContext context, Widget? child) {
+        return TelaListagem(
+          records: widget.controller.records,
+          state: switch (widget.controller.state) {
+            ItemListState.loading => EstadoListaObjetos.carregando,
+            ItemListState.success => EstadoListaObjetos.sucesso,
+            ItemListState.failure => EstadoListaObjetos.falha,
+          },
+          errorMessage: widget.controller.state == ItemListState.failure
+              ? 'Não foi possível acessar os registros. Tente novamente.'
+              : null,
+          onRefresh: widget.controller.load,
+        );
+      },
+    );
+  }
+}
 
 class TelaListagem extends StatelessWidget {
   const TelaListagem({
