@@ -58,6 +58,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                 ),
                 validator: (String? value) => _validateRequiredMaxLength(
                   value,
+                  requiredMessage: 'O nome do objeto é obrigatório.',
                   fieldLabel: 'O nome do objeto',
                   maximum: ItemFieldLimits.nameMaxLength,
                 ),
@@ -78,6 +79,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                 ),
                 validator: (String? value) => _validateRequiredMaxLength(
                   value,
+                  requiredMessage: 'A descrição é obrigatória.',
                   fieldLabel: 'A descrição',
                   maximum: ItemFieldLimits.descriptionMaxLength,
                 ),
@@ -163,11 +165,12 @@ class _TelaCadastroState extends State<TelaCadastro> {
 
   String? _validateRequiredMaxLength(
     String? value, {
+    required String requiredMessage,
     required String fieldLabel,
     required int maximum,
   }) {
     if (value == null || value.trim().isEmpty) {
-      return '$fieldLabel é obrigatório.';
+      return requiredMessage;
     }
     if (value.length > maximum) {
       return '$fieldLabel deve ter no máximo $maximum caracteres.';
