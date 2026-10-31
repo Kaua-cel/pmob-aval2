@@ -24,7 +24,7 @@ class EstadoVazio extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'A integração com os dados será adicionada em uma próxima etapa.',
+              'Cadastre o primeiro objeto para iniciar a listagem.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
