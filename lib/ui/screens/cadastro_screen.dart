@@ -1,7 +1,62 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../models/item_record.dart';
+import '../../state/item_form_controller.dart';
+
+class TelaCadastroComEstado extends StatelessWidget {
+  const TelaCadastroComEstado({super.key, required this.controller, this.onSuccess});
+
+  final ItemFormController controller;
+  final FutureOr<void> Function()? onSuccess;
+
+  Future<void> _handleSave(BuildContext context, ItemRecord record) async {
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    final NavigatorState navigator = Navigator.of(context);
+
+    await controller.submit(record);
+
+    if (!context.mounted) {
+      return;
+    }
+
+    if (controller.state == ItemFormState.success) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Objeto cadastrado com sucesso!'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      await onSuccess?.call();
+      controller.acknowledgeSuccess();
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
+    } else if (controller.state == ItemFormState.failure) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível cadastrar o objeto. Tente novamente.'),
+          duration: Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (BuildContext context, Widget? child) {
+        return TelaCadastro(
+          isProcessing: controller.state == ItemFormState.submitting,
+          onSave: (ItemRecord record) => _handleSave(context, record),
+        );
+      },
+    );
+  }
+}
 
 class TelaCadastro extends StatefulWidget {
   const TelaCadastro({super.key, this.isProcessing = false, this.onSave});
