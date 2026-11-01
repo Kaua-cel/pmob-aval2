@@ -69,20 +69,7 @@ void main() {
     expect(find.text(record.name), findsOneWidget);
     expect(find.text('Encontrado'), findsOneWidget);
   });
-}
 
-final class _ListRepository implements ItemRecordRepository {
-  _ListRepository({required this.onList});
-
-  final Future<List<ItemRecord>> Function() onList;
-
-  @override
-  Future<ItemRecord> createItemRecord(ItemRecord draft) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<ItemRecord>> listItemRecords() => onList();
   testWidgets('valida os campos obrigatórios do cadastro', (WidgetTester tester) async {
     await tester.pumpWidget(MaterialApp(home: TelaCadastro(onSave: (_) async {})));
 
@@ -132,4 +119,18 @@ Future<void> _tapSaveButton(WidgetTester tester) async {
   await tester.drag(find.byType(ListView), const Offset(0, -600));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Salvar objeto'));
+}
+
+final class _ListRepository implements ItemRecordRepository {
+  _ListRepository({required this.onList});
+
+  final Future<List<ItemRecord>> Function() onList;
+
+  @override
+  Future<ItemRecord> createItemRecord(ItemRecord draft) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<ItemRecord>> listItemRecords() => onList();
 }
