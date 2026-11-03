@@ -65,6 +65,20 @@ void main() {
       expect(remote.listRequested, isTrue);
     });
 
+    test('sorts records in descending creation order when remote returns unordered rows', () async {
+      final _FakeRemoteDataSource remote = _FakeRemoteDataSource(
+        rows: [
+          _remoteRow(id: 'older', createdAt: '2026-10-29T10:00:00.000Z'),
+          _remoteRow(id: 'newer', createdAt: '2026-10-29T12:00:00.000Z'),
+        ],
+      );
+      final ItemRecordRepository repository = SupabaseItemRecordRepository(remote);
+
+      final List<ItemRecord> records = await repository.listItemRecords();
+
+      expect(records.map((r) => r.id), ['newer', 'older']);
+    });
+
     test('does not present invalid data or remote failures as success', () async {
       final ItemRecordRepository invalidRepository = SupabaseItemRecordRepository(
         _FakeRemoteDataSource(

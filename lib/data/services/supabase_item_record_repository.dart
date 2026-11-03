@@ -32,7 +32,16 @@ final class SupabaseItemRecordRepository implements ItemRecordRepository {
   @override
   Future<List<ItemRecord>> listItemRecords() async {
     final List<ItemRecordStorage> rows = await _remoteDataSource.listNewestFirst();
-    return rows.map(_fromSupabaseRow).toList(growable: false);
+    final List<ItemRecord> records = rows.map(_fromSupabaseRow).toList();
+    records.sort((ItemRecord a, ItemRecord b) {
+      final DateTime? dateA = a.createdAt;
+      final DateTime? dateB = b.createdAt;
+      if (dateA == null && dateB == null) return 0;
+      if (dateA == null) return 1;
+      if (dateB == null) return -1;
+      return dateB.compareTo(dateA);
+    });
+    return List<ItemRecord>.unmodifiable(records);
   }
 
   @override
