@@ -147,7 +147,80 @@ void main() {
       expect(find.text('Chaveiro de moto'), findsOneWidget);
       expect(find.text('Chave com fita vermelha.'), findsOneWidget);
       expect(find.text('Estacionamento'), findsOneWidget);
+      expect(find.text('Tentar novamente'), findsOneWidget);
       expect(find.byType(TelaCadastro), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'permite tentar novamente após falha de gravação sem duplicar o registro quando a conexão volta',
+    (WidgetTester tester) async {
+      int tentativa = 0;
+      final List<ItemRecord> gravados = <ItemRecord>[];
+      final _FakeRepository repository = _FakeRepository(
+        onCreate: (ItemRecord draft) async {
+          tentativa++;
+          if (tentativa == 1) {
+            throw TimeoutException('tempo limite excedido');
+          }
+          final ItemRecord criado = ItemRecord(
+            id: 'id-recuperado-1',
+            name: draft.name,
+            description: draft.description,
+            location: draft.location,
+            status: draft.status,
+            createdAt: DateTime.utc(2026, 11, 1, 15, 0),
+          );
+          gravados.add(criado);
+          return criado;
+        },
+      );
+      final ItemFormController formController = ItemFormController(repository);
+      bool sucessoChamado = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TelaCadastroComEstado(
+              controller: formController,
+              onSuccess: () => sucessoChamado = true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.enterText(find.widgetWithText(TextFormField, 'Nome do objeto'), 'Estetoscópio');
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Descrição'),
+        'Estetoscópio azul marinho.',
+      );
+      await tester.enterText(find.widgetWithText(TextFormField, 'Local'), 'Bloco de Saúde');
+
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Salvar objeto'));
+      await tester.pumpAndSettle();
+
+      // Primeira tentativa falhou por timeout
+      expect(repository.createCalls, 1);
+      expect(gravados, isEmpty);
+      expect(
+        find.text('O envio demorou mais que o esperado. Verifique sua conexão e tente novamente.'),
+        findsOneWidget,
+      );
+      expect(find.text('Tentar novamente'), findsOneWidget);
+
+      // Garante que o botão Tentar novamente esteja visível e aciona a recuperação
+      await tester.ensureVisible(find.text('Tentar novamente'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tentar novamente'));
+      await tester.pumpAndSettle();
+
+      expect(repository.createCalls, 2);
+      expect(gravados, hasLength(1));
+      expect(gravados.single.name, 'Estetoscópio');
+      expect(sucessoChamado, isTrue);
+      expect(find.text('Objeto cadastrado com sucesso!'), findsOneWidget);
     },
   );
 

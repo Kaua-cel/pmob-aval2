@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../data/services/item_record_repository.dart';
 import '../models/item_record.dart';
+import 'operation_error_message.dart';
 
 /// Estados possíveis da operação de cadastro de um item.
 enum ItemFormState {
@@ -30,6 +31,7 @@ class ItemFormController extends ChangeNotifier {
   final ItemRecordRepository _repository;
   ItemFormState _state = ItemFormState.idle;
   Object? _error;
+  ItemRecord? _lastFailedDraft;
   bool _needsListRefresh = false;
 
   /// Estado atual da operação de cadastro.
@@ -37,6 +39,15 @@ class ItemFormController extends ChangeNotifier {
 
   /// Último erro capturado. Não nulo quando [state] é [ItemFormState.failure].
   Object? get error => _error;
+
+  /// Mensagem segura em português descrevendo a falha atual, ou `null` fora do estado de erro.
+  String? get errorMessage => _state == ItemFormState.failure ? describeWriteError(_error) : null;
+
+  /// Último rascunho cuja gravação falhou, disponível para nova tentativa.
+  ItemRecord? get lastFailedDraft => _lastFailedDraft;
+
+  /// Indica se há uma operação malsucedida pendente que pode ser reenviada.
+  bool get canRetry => _state == ItemFormState.failure && _lastFailedDraft != null;
 
   /// Verdadeiro quando um cadastro foi confirmado e a listagem deve ser recarregada.
   ///
@@ -54,6 +65,7 @@ class ItemFormController extends ChangeNotifier {
 
     _state = ItemFormState.submitting;
     _error = null;
+    _lastFailedDraft = null;
     _needsListRefresh = false;
     notifyListeners();
 
@@ -63,10 +75,23 @@ class ItemFormController extends ChangeNotifier {
       _needsListRefresh = true;
     } catch (error) {
       _error = error;
+      _lastFailedDraft = draft;
       _state = ItemFormState.failure;
     }
 
     notifyListeners();
+  }
+
+  /// Tenta reenviar o último rascunho que falhou.
+  ///
+  /// Só executa quando [state] é [ItemFormState.failure], evitando envios
+  /// duplicados após sucesso ou durante gravação em andamento.
+  Future<void> retry() async {
+    final ItemRecord? draft = _lastFailedDraft;
+    if (_state != ItemFormState.failure || draft == null) {
+      return;
+    }
+    await submit(draft);
   }
 
   /// Reconhece o sucesso e retorna ao estado [ItemFormState.idle].
@@ -75,6 +100,7 @@ class ItemFormController extends ChangeNotifier {
   void acknowledgeSuccess() {
     if (_state != ItemFormState.success) return;
     _state = ItemFormState.idle;
+    _lastFailedDraft = null;
     _needsListRefresh = false;
     notifyListeners();
   }
@@ -86,6 +112,7 @@ class ItemFormController extends ChangeNotifier {
     if (_state == ItemFormState.submitting) return;
     _state = ItemFormState.idle;
     _error = null;
+    _lastFailedDraft = null;
     _needsListRefresh = false;
     notifyListeners();
   }
