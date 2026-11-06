@@ -11,3 +11,24 @@ abstract interface class ItemRecordRepository {
   /// values. It assigns both values after a successful insertion.
   Future<ItemRecord> createItemRecord(ItemRecord draft);
 }
+
+/// Repository fallback used when cloud initialization fails at startup.
+///
+/// Surfaces [_initializationError] asynchronously on read and write operations
+/// so the UI can present a controlled error state instead of crashing on boot.
+final class FailingItemRecordRepository implements ItemRecordRepository {
+  /// Creates a fallback repository that always throws [_initializationError].
+  const FailingItemRecordRepository(this._initializationError);
+
+  final Object _initializationError;
+
+  @override
+  Future<List<ItemRecord>> listItemRecords() {
+    return Future<List<ItemRecord>>.error(_initializationError);
+  }
+
+  @override
+  Future<ItemRecord> createItemRecord(ItemRecord draft) {
+    return Future<ItemRecord>.error(_initializationError);
+  }
+}
