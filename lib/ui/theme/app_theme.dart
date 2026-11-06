@@ -49,5 +49,14 @@ ThemeData criarTemaAplicativo() {
         shape: const StadiumBorder(),
       ),
     ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(44),
+        shape: const StadiumBorder(),
+      ),
+    ),
+    inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
+    chipTheme: const ChipThemeData(side: BorderSide.none),
+    snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
   );
 }
