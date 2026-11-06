@@ -89,16 +89,26 @@ class TelaListagem extends StatelessWidget {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: _buildBody(context),
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openRegistration(context),
+        tooltip: 'Cadastrar item',
         icon: const Icon(Icons.add),
         label: const Text('Cadastrar item'),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context) {
+    final double horizontalPadding = MediaQuery.sizeOf(context).width < 360 ? 12 : 16;
+
     return switch (state) {
       EstadoListaObjetos.carregando => const EstadoCarregandoLista(),
       EstadoListaObjetos.falha => EstadoFalhaLista(onRetry: onRefresh, message: errorMessage),
@@ -107,7 +117,7 @@ class TelaListagem extends StatelessWidget {
         onRefresh: _refresh,
         child: ListView.separated(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+          padding: EdgeInsets.fromLTRB(horizontalPadding, 16, horizontalPadding, 96),
           itemCount: records.length,
           itemBuilder: (BuildContext context, int index) =>
               CartaoRegistroItem(record: records[index]),
