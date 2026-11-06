@@ -122,146 +122,173 @@ class _TelaCadastroState extends State<TelaCadastro> {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final double screenWidth = MediaQuery.sizeOf(context).width;
+    final double horizontalPadding = screenWidth < 360 ? 16 : 24;
+    final double bottomPadding = 40 + MediaQuery.viewInsetsOf(context).bottom;
+    final bool canPop = Navigator.maybeOf(context)?.canPop() ?? false;
 
     return PopScope(
       canPop: !_isProcessing,
       child: Scaffold(
-        appBar: AppBar(title: const Text('Cadastrar item')),
+        appBar: AppBar(
+          leading: canPop
+              ? IconButton(
+                  onPressed: _isProcessing ? null : () => Navigator.of(context).maybePop(),
+                  tooltip: 'Voltar',
+                  icon: const Icon(Icons.arrow_back),
+                )
+              : null,
+          title: const Text('Cadastrar item'),
+        ),
         body: SafeArea(
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
-              children: [
-                Text(
-                  'Informe os dados do objeto',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 8),
-                const Text('Não informe dados pessoais ou sensíveis.'),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _nameController,
-                  enabled: !_isProcessing,
-                  maxLength: ItemFieldLimits.nameMaxLength,
-                  maxLengthEnforcement: MaxLengthEnforcement.none,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Nome do objeto',
-                    hintText: 'Ex.: Guarda-chuva preto',
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    24,
+                    horizontalPadding,
+                    bottomPadding,
                   ),
-                  validator: (String? value) => _validateRequiredMaxLength(
-                    value,
-                    requiredMessage: 'O nome do objeto é obrigatório.',
-                    fieldLabel: 'O nome do objeto',
-                    maximum: ItemFieldLimits.nameMaxLength,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descriptionController,
-                  enabled: !_isProcessing,
-                  maxLength: ItemFieldLimits.descriptionMaxLength,
-                  maxLengthEnforcement: MaxLengthEnforcement.none,
-                  minLines: 3,
-                  maxLines: 5,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Descrição',
-                    hintText: 'Descreva características que ajudem a identificar o objeto',
-                  ),
-                  validator: (String? value) => _validateRequiredMaxLength(
-                    value,
-                    requiredMessage: 'A descrição é obrigatória.',
-                    fieldLabel: 'A descrição',
-                    maximum: ItemFieldLimits.descriptionMaxLength,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _locationController,
-                  enabled: !_isProcessing,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Local',
-                    hintText: 'Ex.: Biblioteca',
-                  ),
-                  validator: (String? value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Informe o local do objeto.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                Text('Situação', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                SegmentedButton<ItemStatus>(
-                  segments: const [
-                    ButtonSegment<ItemStatus>(
-                      value: ItemStatus.lost,
-                      icon: Icon(Icons.search_off_outlined),
-                      label: Text('Perdido'),
+                  children: [
+                    Text(
+                      'Informe os dados do objeto',
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                    ButtonSegment<ItemStatus>(
-                      value: ItemStatus.found,
-                      icon: Icon(Icons.check_circle_outline),
-                      label: Text('Encontrado'),
+                    const SizedBox(height: 8),
+                    const Text('Não informe dados pessoais ou sensíveis.'),
+                    const SizedBox(height: 24),
+                    TextFormField(
+                      controller: _nameController,
+                      enabled: !_isProcessing,
+                      maxLength: ItemFieldLimits.nameMaxLength,
+                      maxLengthEnforcement: MaxLengthEnforcement.none,
+                      textCapitalization: TextCapitalization.sentences,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Nome do objeto',
+                        hintText: 'Ex.: Guarda-chuva preto',
+                      ),
+                      validator: (String? value) => _validateRequiredMaxLength(
+                        value,
+                        requiredMessage: 'O nome do objeto é obrigatório.',
+                        fieldLabel: 'O nome do objeto',
+                        maximum: ItemFieldLimits.nameMaxLength,
+                      ),
                     ),
-                  ],
-                  selected: <ItemStatus>{_status},
-                  onSelectionChanged: _isProcessing
-                      ? null
-                      : (Set<ItemStatus> selected) => setState(() => _status = selected.first),
-                ),
-                if (widget.hasError) ...[
-                  const SizedBox(height: 24),
-                  Card(
-                    color: colorScheme.errorContainer,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _descriptionController,
+                      enabled: !_isProcessing,
+                      maxLength: ItemFieldLimits.descriptionMaxLength,
+                      maxLengthEnforcement: MaxLengthEnforcement.none,
+                      minLines: 3,
+                      maxLines: 5,
+                      textCapitalization: TextCapitalization.sentences,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Descrição',
+                        hintText: 'Descreva características que ajudem a identificar o objeto',
+                      ),
+                      validator: (String? value) => _validateRequiredMaxLength(
+                        value,
+                        requiredMessage: 'A descrição é obrigatória.',
+                        fieldLabel: 'A descrição',
+                        maximum: ItemFieldLimits.descriptionMaxLength,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _locationController,
+                      enabled: !_isProcessing,
+                      textCapitalization: TextCapitalization.sentences,
+                      textInputAction: TextInputAction.done,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Local',
+                        hintText: 'Ex.: Biblioteca',
+                      ),
+                      validator: (String? value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Informe o local do objeto.';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    Text('Situação', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    SegmentedButton<ItemStatus>(
+                      showSelectedIcon: screenWidth >= 340,
+                      segments: const [
+                        ButtonSegment<ItemStatus>(
+                          value: ItemStatus.lost,
+                          icon: Icon(Icons.search_off_outlined),
+                          label: Text('Perdido'),
+                        ),
+                        ButtonSegment<ItemStatus>(
+                          value: ItemStatus.found,
+                          icon: Icon(Icons.check_circle_outline),
+                          label: Text('Encontrado'),
+                        ),
+                      ],
+                      selected: <ItemStatus>{_status},
+                      onSelectionChanged: _isProcessing
+                          ? null
+                          : (Set<ItemStatus> selected) => setState(() => _status = selected.first),
+                    ),
+                    if (widget.hasError) ...[
+                      const SizedBox(height: 24),
+                      Card(
+                        color: colorScheme.errorContainer,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Icon(Icons.error_outline, color: colorScheme.onErrorContainer),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Verifique sua conexão e tente enviar os dados novamente.',
-                                  style: TextStyle(color: colorScheme.onErrorContainer),
-                                ),
+                              Row(
+                                children: [
+                                  Icon(Icons.error_outline, color: colorScheme.onErrorContainer),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Verifique sua conexão e tente enviar os dados novamente.',
+                                      style: TextStyle(color: colorScheme.onErrorContainer),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              OutlinedButton.icon(
+                                onPressed: _isProcessing ? null : _retryOrSubmit,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Tentar novamente'),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          OutlinedButton.icon(
-                            onPressed: _isProcessing ? null : _retryOrSubmit,
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Tentar novamente'),
-                          ),
-                        ],
+                        ),
                       ),
+                    ],
+                    const SizedBox(height: 32),
+                    FilledButton.icon(
+                      onPressed: _isProcessing || widget.onSave == null ? null : _submit,
+                      icon: _isProcessing
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.save_outlined),
+                      label: Text(_isProcessing ? 'Salvando...' : 'Salvar objeto'),
                     ),
-                  ),
-                ],
-                const SizedBox(height: 32),
-                FilledButton.icon(
-                  onPressed: _isProcessing || widget.onSave == null ? null : _submit,
-                  icon: _isProcessing
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.save_outlined),
-                  label: Text(_isProcessing ? 'Salvando...' : 'Salvar objeto'),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
