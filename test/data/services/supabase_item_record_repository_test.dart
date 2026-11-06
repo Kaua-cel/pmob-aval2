@@ -119,6 +119,24 @@ void main() {
       );
     });
   });
+
+  group('FailingItemRecordRepository', () {
+    test('reports initialization error asynchronously on read and write', () async {
+      const SupabaseConfigurationException initializationError = SupabaseConfigurationException(
+        'missing SUPABASE_URL',
+      );
+      const ItemRecordRepository repository = FailingItemRecordRepository(initializationError);
+      final ItemRecord draft = ItemRecord(
+        name: 'Chave',
+        description: 'Chave com argola prateada.',
+        location: 'Portaria',
+        status: ItemStatus.lost,
+      );
+
+      await expectLater(repository.listItemRecords(), throwsA(same(initializationError)));
+      await expectLater(repository.createItemRecord(draft), throwsA(same(initializationError)));
+    });
+  });
 }
 
 final class _FakeRemoteDataSource implements ItemRecordRemoteDataSource {

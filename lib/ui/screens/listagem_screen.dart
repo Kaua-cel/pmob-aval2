@@ -39,9 +39,7 @@ class _TelaListagemComEstadoState extends State<TelaListagemComEstado> {
             ItemListState.success => EstadoListaObjetos.sucesso,
             ItemListState.failure => EstadoListaObjetos.falha,
           },
-          errorMessage: widget.controller.state == ItemListState.failure
-              ? 'Não foi possível acessar os registros. Tente novamente.'
-              : null,
+          errorMessage: widget.controller.errorMessage,
           onRefresh: widget.controller.load,
         );
       },
@@ -85,7 +83,7 @@ class TelaListagem extends StatelessWidget {
         title: const Text('Achados e Perdidos'),
         actions: [
           IconButton(
-            onPressed: _refresh,
+            onPressed: state == EstadoListaObjetos.carregando ? null : _refresh,
             tooltip: 'Atualizar listagem',
             icon: const Icon(Icons.refresh),
           ),
