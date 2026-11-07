@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pmob_aval2/data/services/supabase_item_record_repository.dart';
@@ -175,6 +177,53 @@ void main() {
     expect(find.text('Ainda não há itens cadastrados.'), findsOneWidget);
     expect(find.byType(CartaoRegistroItem), findsNothing);
   });
+
+  testWidgets(
+    'desabilita botão de atualizar durante carregamento e permite recuperar de falha com Tentar novamente',
+    (WidgetTester tester) async {
+      final Completer<List<ItemRecordStorage>> primeiraConsulta =
+          Completer<List<ItemRecordStorage>>();
+      int tentativa = 0;
+
+      final _FakeRemoteDataSource dataSource = _FakeRemoteDataSource(() {
+        tentativa++;
+        if (tentativa == 1) {
+          return primeiraConsulta.future;
+        }
+        return Future<List<ItemRecordStorage>>.value(<ItemRecordStorage>[itemMaisRecenteStorage]);
+      });
+      final SupabaseItemRecordRepository repository = SupabaseItemRecordRepository(dataSource);
+      final ItemListController controller = ItemListController(repository);
+
+      await tester.pumpWidget(MaterialApp(home: TelaListagemComEstado(controller: controller)));
+
+      // Enquanto carrega, o botão de atualizar na AppBar fica desabilitado
+      final IconButton refreshButtonWhileLoading = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.refresh),
+      );
+      expect(refreshButtonWhileLoading.onPressed, isNull);
+
+      // Falha na primeira consulta
+      primeiraConsulta.completeError(TimeoutException('tempo esgotado'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Não foi possível carregar os objetos.'), findsOneWidget);
+      expect(
+        find.text(
+          'A consulta demorou mais que o esperado. Verifique sua conexão e tente novamente.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Tentar novamente'), findsOneWidget);
+
+      // Clica em Tentar novamente e recupera a listagem
+      await tester.tap(find.text('Tentar novamente'));
+      await tester.pumpAndSettle();
+
+      expect(dataSource.listCalls, 2);
+      expect(find.text('Calculadora científica'), findsOneWidget);
+    },
+  );
 }
 
 final class _FakeRemoteDataSource implements ItemRecordRemoteDataSource {
