@@ -11,10 +11,15 @@ import 'state/item_list_controller.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final SupabaseConfiguration configuration = SupabaseConfiguration.fromEnvironment();
-  await Supabase.initialize(url: configuration.url, publishableKey: configuration.anonKey);
+  late final ItemRecordRepository repository;
+  try {
+    final SupabaseConfiguration configuration = SupabaseConfiguration.fromEnvironment();
+    await Supabase.initialize(url: configuration.url, publishableKey: configuration.anonKey);
+    repository = SupabaseItemRecordRepository.fromInitializedClient();
+  } catch (error) {
+    repository = FailingItemRecordRepository(error);
+  }
 
-  final ItemRecordRepository repository = SupabaseItemRecordRepository.fromInitializedClient();
   final ItemListController itemListController = ItemListController(repository);
   final ItemFormController itemFormController = ItemFormController(repository);
 

@@ -94,12 +94,33 @@ void main() {
 
     await ctrl.submit(draft);
     expect(ctrl.state, ItemFormState.failure);
+    expect(ctrl.canRetry, isTrue);
+    expect(ctrl.lastFailedDraft, same(draft));
+    expect(ctrl.errorMessage, 'Não foi possível cadastrar o objeto. Tente novamente.');
 
-    await ctrl.submit(draft);
+    await ctrl.retry();
 
     expect(repo.createCalls, 2);
     expect(ctrl.state, ItemFormState.success);
+    expect(ctrl.canRetry, isFalse);
+    expect(ctrl.lastFailedDraft, isNull);
     expect(ctrl.error, isNull);
+    expect(ctrl.errorMessage, isNull);
+  });
+
+  test('retry ignora chamadas fora do estado failure para evitar duplicação', () async {
+    final _FakeRepository repo = _FakeRepository(onCreate: (_) async => confirmed);
+    final ItemFormController ctrl = ItemFormController(repo);
+
+    // Em idle, retry não deve chamar o repositório
+    await ctrl.retry();
+    expect(repo.createCalls, 0);
+
+    // Após success, retry também não deve criar duplicata
+    await ctrl.submit(draft);
+    expect(ctrl.state, ItemFormState.success);
+    await ctrl.retry();
+    expect(repo.createCalls, 1);
   });
 
   test('reset volta a idle e limpa o erro', () async {
