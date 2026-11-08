@@ -138,31 +138,59 @@ O aplicativo lê a URL pública do projeto e a chave pública (`publishable` / `
 
 Caso deseje provisionar uma instância própria do Supabase no plano gratuito, basta criar um projeto em [supabase.com](https://supabase.com) e executar o script [`supabase/migrations/20261029120000_create_item_records.sql`](supabase/migrations/20261029120000_create_item_records.sql) no **SQL Editor** (procedimento detalhado em [`docs/cloud-storage.md`](docs/cloud-storage.md)).
 
-### 3. Executar o aplicativo
+### 3. Executar o aplicativo (modo Release)
+
+Por padrão, recomenda-se executar o aplicativo em **modo Release** (`--release`) para melhor desempenho em qualquer plataforma:
 
 Em terminais Bash / macOS / Linux:
 
 ```bash
-flutter run \
+flutter run --release \
   --dart-define=SUPABASE_URL=https://mdkhjudazkkczbhcnzmd.supabase.co \
   --dart-define=SUPABASE_ANON_KEY=sb_publishable_fa0V3CNt0WqRJPWW5AUtRw_lfB6vbyU
 ```
 
-No Windows (PowerShell):
+No Windows (`cmd` — Prompt de Comando):
 
-```powershell
-flutter run `
-  --dart-define=SUPABASE_URL=https://mdkhjudazkkczbhcnzmd.supabase.co `
+```cmd
+flutter run --release ^
+  --dart-define=SUPABASE_URL=https://mdkhjudazkkczbhcnzmd.supabase.co ^
   --dart-define=SUPABASE_ANON_KEY=sb_publishable_fa0V3CNt0WqRJPWW5AUtRw_lfB6vbyU
 ```
 
-Para executar no navegador (Web / Chrome):
+Para executar no navegador Web (Google Chrome) em modo Release:
 
-```bash
-flutter run -d chrome \
-  --dart-define=SUPABASE_URL=https://mdkhjudazkkczbhcnzmd.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=sb_publishable_fa0V3CNt0WqRJPWW5AUtRw_lfB6vbyU
-```
+- **Bash / macOS / Linux:**
+  ```bash
+  flutter run --release -d chrome \
+    --dart-define=SUPABASE_URL=https://mdkhjudazkkczbhcnzmd.supabase.co \
+    --dart-define=SUPABASE_ANON_KEY=sb_publishable_fa0V3CNt0WqRJPWW5AUtRw_lfB6vbyU
+  ```
+- **Windows (`cmd`):**
+  ```cmd
+  flutter run --release -d chrome ^
+    --dart-define=SUPABASE_URL=https://mdkhjudazkkczbhcnzmd.supabase.co ^
+    --dart-define=SUPABASE_ANON_KEY=sb_publishable_fa0V3CNt0WqRJPWW5AUtRw_lfB6vbyU
+  ```
+
+#### Opções adicionais de execução (modo Debug e seleção de dispositivo/navegador)
+
+- **Executar em modo Debug:** basta remover a flag `--release` do comando (habilita *Hot Reload*, *Hot Restart* e inspeção de widgets):
+  ```cmd
+  flutter run ^
+    --dart-define=SUPABASE_URL=https://mdkhjudazkkczbhcnzmd.supabase.co ^
+    --dart-define=SUPABASE_ANON_KEY=sb_publishable_fa0V3CNt0WqRJPWW5AUtRw_lfB6vbyU
+  ```
+- **Alterar o dispositivo ou navegador (`-d <id-do-dispositivo>`):**
+  1. Liste os dispositivos, emuladores e navegadores disponíveis na máquina com:
+     ```cmd
+     flutter devices
+     ```
+  2. Informe o identificador desejado com o parâmetro `-d`, por exemplo:
+     - `-d chrome` (Google Chrome)
+     - `-d edge` (Microsoft Edge)
+     - `-d emulator-5554` (Emulador Android específico)
+     - `-d <id-do-aparelho>` (Dispositivo físico conectado via USB)
 
 ---
 
