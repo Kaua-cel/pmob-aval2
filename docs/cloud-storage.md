@@ -20,10 +20,12 @@ dispositivo nesta tabela.
    `SELECT` e `INSERT` para `anon` definidas na migration.
 4. Copie a URL HTTP(S) do projeto e a chave `anon` ou publishable para os `dart-defines` abaixo.
 
-Execute o aplicativo assim, substituindo apenas no terminal local:
+Execute o aplicativo com os parâmetros públicos do projeto:
 
 ```sh
-flutter run --dart-define=SUPABASE_URL=<project-url> --dart-define=SUPABASE_ANON_KEY=<anon-key>
+flutter run \
+  --dart-define=SUPABASE_URL=https://mdkhjudazkkczbhcnzmd.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=sb_publishable_fa0V3CNt0WqRJPWW5AUtRw_lfB6vbyU
 ```
 
 `SUPABASE_URL` e `SUPABASE_ANON_KEY` são valores públicos de cliente, protegidos por RLS.
@@ -35,31 +37,40 @@ somente nomes de variáveis e não é lido pelo aplicativo.
 
 Tabela: `public.item_records`.
 
-| Coluna | Regra |
-| --- | --- |
-| `id` | UUID, chave primária, gerado pelo banco. |
-| `name` | Texto obrigatório, máximo de 60 caracteres. |
-| `description` | Texto obrigatório, máximo de 200 caracteres. |
-| `location` | Texto obrigatório. |
-| `status` | Somente `lost` ou `found`. |
-| `created_at` | `timestamptz` UTC, preenchido pelo servidor com `now()`. |
+| Coluna        | Regra                                                    |
+| ------------- | -------------------------------------------------------- |
+| `id`          | UUID, chave primária, gerado pelo banco.                 |
+| `name`        | Texto obrigatório, máximo de 60 caracteres.              |
+| `description` | Texto obrigatório, máximo de 200 caracteres.             |
+| `location`    | Texto obrigatório.                                       |
+| `status`      | Somente `lost` ou `found`.                               |
+| `created_at`  | `timestamptz` UTC, preenchido pelo servidor com `now()`. |
 
 O papel `anon` recebe apenas `SELECT` e `INSERT` nas colunas `name`, `description`,
 `location` e `status`. A migration não concede `UPDATE` nem `DELETE`; por isso o cliente
 não consegue definir `id` ou `created_at` na criação.
 
-## Handoff para Issue 12
+## Integração e Validação da Aplicação
 
-Use `ItemRecordRepository` para listar e criar objetos. `listItemRecords()` retorna
-registros por `created_at` decrescente. `createItemRecord(draft)` envia somente `name`,
-`description`, `location` e `status`; o retorno contém `id` e `createdAt` gerados pelo
-servidor. Crie a instância real com `SupabaseItemRecordRepository.fromInitializedClient()`
-depois da inicialização em `main`.
+A aplicação utiliza `ItemRecordRepository` (implementado por `SupabaseItemRecordRepository`)
+conectado aos controladores `ItemListController` e `ItemFormController` inicializados em
+`lib/main.dart`:
 
-Validação manual entre instalações:
+- `listItemRecords()` retorna os registros ordenados por `created_at` decrescente (mais
+  recentes primeiro).
+- `createItemRecord(draft)` envia somente `name`, `description`, `location` e `status`; o
+  retorno contém `id` e `createdAt` gerados pelo servidor.
+- Caso `SUPABASE_URL` ou `SUPABASE_ANON_KEY` estejam ausentes ou inválidos na inicialização,
+  `FailingItemRecordRepository` encaminha a falha de configuração de forma segura para a
+  camada de estado, exibindo mensagens em português com opção de **Tentar novamente** sem
+  encerrar abruptamente a aplicação.
 
-1. Inicie a primeira instalação com os mesmos dois `dart-defines` e crie um registro.
-2. Confirme no Table Editor que `id` e `created_at` foram gerados pelo servidor.
-3. Feche e reabra a primeira instalação; confirme a leitura do mesmo registro.
-4. Inicie outra instalação com os mesmos `dart-defines`; confirme a leitura.
-5. No SQL Editor ou cliente anônimo, confirme que `UPDATE` e `DELETE` são negados.
+### Roteiro de validação entre instalações
+
+1. Inicie a primeira instalação com os dois parâmetros `--dart-define` e cadastre um objeto.
+2. Confirme no Table Editor do Supabase que `id` e `created_at` foram gerados pelo servidor.
+3. Feche e reabra a primeira instalação; confirme que o registro permanece listado.
+4. Inicie uma segunda instalação (ou navegador) com os mesmos `--dart-define` e acione
+   **Atualizar listagem**; confirme a leitura compartilhada do mesmo registro.
+5. No SQL Editor ou cliente anônimo, confirme que operações `UPDATE` e `DELETE` são negadas
+   pelas políticas de RLS.
