@@ -6,8 +6,13 @@
 *.swp
 .buildlog/
 .history
+.idea/
+*.iml
 
-
+#develops skills agent
+.agents
+.config
+.dart_tool
 
 # Flutter repo-specific
 /bin/cache/
@@ -106,6 +111,32 @@ unlinked_spec.ds
 
 # Coverage
 coverage/
+
+# Distribuição e credenciais privadas
+*.apk
+*.aab
+*.ipa
+
+# Executáveis e binários gerados
+*.exe
+*.dll
+*.so
+*.dylib
+*.bin
+*.o
+*.obj
+
+*.keystore
+*.p12
+*.p8
+*.mobileprovision
+*.cer
+*.crt
+*.pem
+.env
+.env.*
+!.env.example
+supabase/.temp/
 
 # Symbols
 app.*.symbols
